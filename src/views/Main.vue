@@ -53,15 +53,21 @@
     </Menu>
     <router-view></router-view>
 
+    <transition name="slide-fade">
+      <div class="shopping" v-show="shoppingcar">
+        <shopping></shopping>
+      </div>
+    </transition>
+    
     <div class="bottom">
       <Row>
         <i-col span="5">
           <div class="border">
-            <Icon type="ios-cart" style="font-size:40px"></Icon>
+            <router-link to="" class="font"><Icon @click="shoppingcar=!shoppingcar" type="ios-cart" style="font-size:40px"></Icon></router-link>
           </div>
         </i-col>
         <i-col span="4" class="font">
-          <span :model='price'>￥{{price.num}}</span>
+          <span>￥{{shopcarlist}}</span>
         </i-col>
         <i-col span="9" class="line-height">
           <h3>只需配送费$4元</h3>
@@ -76,20 +82,31 @@
 
 <script>
 import { getSeller } from "../api/apis";
+import shopping from './Shopping'
 export default {
   data() {
     return {
-      price:{
-          num:'',
-      },
+      shoppingcar:false,
       data: {}
     };
+  },
+  computed: {
+    shopcarlist() {
+      let total=0
+      for(let food of this.$store.getters.getShopCarGoods){
+        total+=food.num*food.price
+      }
+      return total
+    }
   },
   created() {
     getSeller().then(res => {
       //   console.log(res.data.data);
       this.data = res.data.data;
     });
+  },
+  components:{
+    shopping
   }
 };
 </script>
@@ -183,5 +200,22 @@ export default {
       background: rgb(48, 47, 47);
     }
   }
+}
+.shopping{
+  position: fixed;
+  width: 100%;
+  bottom: 50px;
+  background: #ccc;
+}
+
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .8s ease;
+}
+.slide-fade-enter, .slide-fade-leave-to{
+  transform: translateY(300px);
+  opacity: 0;
 }
 </style>

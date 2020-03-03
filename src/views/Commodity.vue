@@ -5,7 +5,7 @@
         <div
           :class="{leftGoods:true,selected:index==curSelected}"
           @click="leftTitle(index)"
-          v-for="(item,index) in list"
+          v-for="(item,index) in goodslist"
           :key="item.name"
         >
           <img style="width:16px" v-show="item.type==1" src="../assets/imgs/decrease_1@2x.png" alt />
@@ -17,26 +17,24 @@
 
     <div class="right-box">
       <ul class="content">
-        <div :id="index" v-for="(item,index) in list" :key="item.name">
+        <div :id="index" v-for="(item,index) in goodslist" :key="item.name">
           <h5>{{item.name}}</h5>
-          <div class="flex" v-for="child in item.foods" :key="child.id">
+          <div class="flex" v-for="child in item.foods" :key="child.name">
             <div>
               <img :src="child.icon" alt />
             </div>
             <div>
-              <p>{{child.name}}</p>
+              <p style="font-size:16px"><strong>{{child.name}}</strong></p>
               <p>{{child.description}}</p>
               <label>月售{{child.sellCount}}份 好评率{{child.rating}}%</label>
               <span class="span">￥{{child.price}}</span>
-              <i-button class="width" type="primary" shape="circle" icon="plus"></i-button>
-              <span :model="data">{{data.num}}</span>
-              <i-button
-                class="width"
-                @click="add(child.name)"
-                type="primary"
-                shape="circle"
-                icon="plus"
-              ></i-button>
+
+              <button class="width" @click="clickNumChange(child.name,-1)">-</button>
+              
+              <span style="margin:0 5px">{{child.num}}</span>
+
+              <button class="width"  @click="clickNumChange(child.name,1)">+</button>
+
             </div>
           </div>
         </div>
@@ -53,34 +51,65 @@ import BSscroll from "better-scroll";
 export default {
   data() {
     return {
-      data: {
-        num: ""
-      },
-      list: [],
-      curSelected: 0
+      // list: [],
+      curSelected: 0,
     };
   },
   created() {
     getCommodity().then(res => {
-      //   console.log(res.data.data);
-      this.list = res.data.data;
+        // console.log(res);
+      this.$store.commit('initList',res.data.data)
     });
   },
   mounted() {
     new BSscroll(document.querySelector(".left-box"), {
       click: true
     });
-    this.rightDiv = new BSscroll(document.querySelector(".right-box"));
+    this.rightDiv = new BSscroll(document.querySelector(".right-box"),{
+      probeType:3
+    });
+    this.rightDiv.on('scroll',({y})=>{
+      let _y=Math.abs(y)
+      // console.log(_y)
+      for (let obj of this.getDivMath){
+        if(_y>=obj.min && _y<obj.max){
+          this.curSelected=obj.index
+        }
+      }
+    }) 
   },
   methods: {
     leftTitle(index) {
-      //   console.log(index)
+        // console.log(index)
       this.curSelected = index;
       this.rightDiv.scrollToElement(document.getElementById(index), 400);
     },
-    add(i) {
-      console.log(i);
-      //   this.data.num += i;
+    clickNumChange(name,key) {
+      console.log(name,key);
+      this.$store.commit('changeGoodsNum',{
+        name,
+        key
+      })      
+    },
+   
+  },
+  computed:{
+    getDivMath(){
+      let arr=[]
+      let total=0
+      for(let i=0;i<this.goodslist.length;i++){
+        let curDivHeight=document.getElementById(i).offsetHeight
+        arr.push({min:total,max:total+curDivHeight,index:i})
+        total+=curDivHeight
+      }
+      return arr
+    },
+    goodslist(){
+      return this.$store.state.goodslist
+    },
+    num(){
+      return this.$store.state.num
+
     }
   }
 };
@@ -94,7 +123,7 @@ export default {
   height: 100%;
   display: flex;
   .left-box {
-    background: rgb(247, 245, 245);
+    background: rgb(236, 236, 236);
     width: 100px;
     height: 430px;
     overflow: scroll;
@@ -130,10 +159,14 @@ export default {
     .width {
       width: 25px;
       height: 25px;
+      border-radius: 50%;
+      border: 0;
+      background:rgb(14, 117, 250);
+      color: #fff;
     }
     .span {
       color: #f00;
-      margin-right: 50px;
+      margin-right: 30px;
     }
   }
 }

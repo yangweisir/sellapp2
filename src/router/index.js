@@ -30,6 +30,11 @@ const routes = [
         name: 'Pay',
         component: () => import('../views/Pay.vue')
       },
+      {
+        path: '/Shopping',
+        name: 'Shopping',
+        component: () => import('../views/Shopping.vue')
+      },
     ]
   },
   
